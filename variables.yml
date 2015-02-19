@@ -1,0 +1,8 @@
+---
+username: stack
+password: TNETENNBA
+db_pass: pass
+rabbit_pass: password
+service_token: servicetoken 
+service_pass: servicepassword
+remote_user: ubuntu

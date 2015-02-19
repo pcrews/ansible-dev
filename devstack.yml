@@ -1,0 +1,64 @@
+- name: setup devstack 
+  hosts: devstack 
+  vars_files:
+  - variables.yml
+  remote_user: "{{ remote_user }}"
+
+  tasks:
+
+  - name: update aptitude cache
+    raw: apt-get update
+    sudo: yes
+
+  - name: install python-apt for ansible
+    raw: apt-get install python-apt
+    sudo: yes
+
+  - name: ensure a sudo group exists
+    group: name=sudo state=present
+
+  - name: ensure users in the sudo group can sudo passwordless
+    lineinfile: "dest=/etc/sudoers state=present
+                 regexp='^%sudo' line='%sudo ALL=(ALL) NOPASSWD: ALL'
+                 validate='visudo -cf %s'"
+    sudo: yes
+
+  - name: create the user account
+    user: name={{ username }} state=present
+          append=true groups=sudo
+    sudo: yes
+
+  - name: some basic apt stuff
+    apt: pkg={{ item }} state=installed
+         update_cache=yes cache_valid_time=3600
+    with_items:
+    - git
+    - python-pip
+    sudo: yes
+
+- name: install devstack
+  hosts: devstack
+  vars_files:
+  - variables.yml
+  remote_user: "{{ remote_user }}"
+  tasks:
+
+  - name: clone devstack
+    git: repo=https://github.com/openstack-dev/devstack.git
+         dest=~/devstack
+         version=master
+    sudo: yes
+    sudo_user: "{{ username }}"
+
+  - name: devstack localrc
+    template: src=templates/devstack-localrc.conf
+              dest=~/devstack/localrc
+    sudo: yes
+    sudo_user: "{{ username }}"
+
+  - name: stack it
+    command: chdir=~/devstack ./stack.sh
+    ignore_errors: yes
+    sudo: yes
+    sudo_user: "{{ username }}"
+
