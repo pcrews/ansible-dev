@@ -1,0 +1,63 @@
+- name: setup subunit2sql 
+  hosts: subunit2sql 
+  vars_files:
+  - variables.yml
+  remote_user: "{{ remote_user }}"
+
+  tasks:
+
+  - name: update aptitude cache
+    raw: apt-get update
+    sudo: yes
+
+  - name: install python-apt for ansible
+    raw: apt-get install python-apt
+    sudo: yes
+
+  - name: ensure a sudo group exists
+    group: name=sudo state=present
+
+  - name: ensure users in the sudo group can sudo passwordless
+    lineinfile: "dest=/etc/sudoers state=present
+                 regexp='^%sudo' line='%sudo ALL=(ALL) NOPASSWD: ALL'
+                 validate='visudo -cf %s'"
+    sudo: yes
+
+  - name: create the user account
+    user: name={{ remote_user }} state=present
+          append=true groups=sudo
+    sudo: yes
+
+  - name: install basics 
+    apt: pkg={{ item }} state=installed
+         update_cache=yes cache_valid_time=3600
+    with_items:
+    - git
+    - python-dev
+    - python-pip
+    - mysql-client
+    - mysql-server
+    - python-mysqldb
+    sudo: yes
+
+- name: install subunit2sql
+  hosts: subunit2sql 
+  vars_files:
+  - variables.yml
+  remote_user: "{{ remote_user }}"
+  tasks:
+
+  - name: clone subunit2sql 
+    git: repo=https://github.com/openstack-infra/subunit2sql.git
+         dest=~/subunit2sql
+         version=master
+    sudo: yes
+    sudo_user: "{{ remote_user }}"
+
+  - name: install requirements
+    pip: requirements=requirements.txt chdir=/home/{{ remote_user }}/subunit2sql
+    sudo: yes
+
+  - name: install subunit2sql
+    command: chdir=/home/{{ remote_user }}/subunit2sql python setup.py install 
+    sudo: yes
