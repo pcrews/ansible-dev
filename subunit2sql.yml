@@ -40,6 +40,10 @@
     - python-mysqldb
     sudo: yes
 
+  - name: install git-review
+    pip: name=git-review
+    sudo: yes
+
 - name: install subunit2sql
   hosts: subunit2sql 
   vars_files:
@@ -54,6 +58,13 @@
     sudo: yes
     sudo_user: "{{ remote_user }}"
 
+
+  - name: clone subunit2sql
+    command: chdir=/home/{{ remote_user }}/subunit2sql git pull https://review.openstack.org/openstack-infra/subunit2sql refs/changes/00/{{ gerrit_revno }}/1 
+    sudo: yes
+    sudo_user: "{{ remote_user }}"
+
+
   - name: install requirements
     pip: requirements=requirements.txt chdir=/home/{{ remote_user }}/subunit2sql
     sudo: yes
@@ -61,3 +72,9 @@
   - name: install subunit2sql
     command: chdir=/home/{{ remote_user }}/subunit2sql python setup.py install 
     sudo: yes
+
+  - name: create subunit schema
+    command: mysql -uroot -e "CREATE SCHEMA subunit"
+
+  - name: subunit2sql database
+    command: subunit2sql-db-manage --database-connection mysql://root:''@127.0.0.1/subunit upgrade head
