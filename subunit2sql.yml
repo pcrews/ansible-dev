@@ -60,7 +60,7 @@
 
 
   - name: clone subunit2sql
-    command: chdir=/home/{{ remote_user }}/subunit2sql git pull https://review.openstack.org/openstack-infra/subunit2sql refs/changes/00/{{ gerrit_revno }}/1 
+    command: chdir=/home/{{ remote_user }}/subunit2sql git pull https://review.openstack.org/openstack-infra/subunit2sql refs/changes/00/{{ gerrit_revno }}/{{ gerrit_patchset }}
     sudo: yes
     sudo_user: "{{ remote_user }}"
 
@@ -74,7 +74,7 @@
     sudo: yes
 
   - name: create subunit schema
-    command: mysql -uroot -e "CREATE SCHEMA subunit"
+    command: mysql -uroot -e "CREATE SCHEMA IF NOT EXISTS subunit"
 
   - name: subunit2sql database
     command: subunit2sql-db-manage --database-connection mysql://root:''@127.0.0.1/subunit upgrade head

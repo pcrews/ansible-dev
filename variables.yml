@@ -6,5 +6,5 @@ rabbit_pass: password
 service_token: servicetoken 
 service_pass: servicepassword
 remote_user: ubuntu
-gerrit_change_id: I05049c673e5c6ad94654f787c00e8d6046f90fc2
 gerrit_revno: 172200
+gerrit_patchset: 3
